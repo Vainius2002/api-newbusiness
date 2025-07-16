@@ -15,10 +15,10 @@
 <div class="card mb-4">
     <div class="card-body">
         <form method="GET" action="{{ url_for('advertisers.list_advertisers') }}" class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <input type="text" name="search" class="form-control" placeholder="Search by name or agency" value="{{ search }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select name="status" class="form-select">
                     <option value="">All Statuses</option>
                     <option value="non_qualified" {% if status_filter == 'non_qualified' %}selected{% endif %}>Non Qualified</option>
@@ -30,7 +30,7 @@
                     <option value="non_market" {% if status_filter == 'non_market' %}selected{% endif %}>Non-Market</option>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select name="agency" class="form-select">
                     <option value="">All Agencies</option>
                     {% for agency in agencies %}
@@ -39,9 +39,23 @@
                 </select>
             </div>
             <div class="col-md-2">
+                <select name="assigned" class="form-select">
+                    <option value="">All Assigned</option>
+                    <option value="unassigned" {% if assigned_filter == 'unassigned' %}selected{% endif %}>Unassigned</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" {% if assigned_filter == user.id|string %}selected{% endif %}>{{ user.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-search"></i> Search
                 </button>
+            </div>
+            <div class="col-md-1">
+                <a href="{{ url_for('advertisers.list_advertisers') }}" class="btn btn-secondary w-100">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
             </div>
         </form>
     </div>
@@ -64,8 +78,36 @@
                 <th style="max-width: 300px; word-wrap: break-word;">Name</th>
                 <th>Current Agency</th>
                 <th>Lead Status</th>
-                <th>Gross Spending</th>
-                <th>Net Spending</th>
+                <th>
+                    <a href="{{ url_for('advertisers.list_advertisers', sort='gross', order='asc' if sort == 'gross' and order == 'desc' else 'desc', page=pagination.page, search=search, status=status_filter, agency=agency_filter, assigned=assigned_filter) }}" 
+                       class="text-decoration-none text-dark">
+                        Gross Spending
+                        {% if sort == 'gross' %}
+                            {% if order == 'desc' %}
+                                <i class="bi bi-sort-down"></i>
+                            {% else %}
+                                <i class="bi bi-sort-up-alt"></i>
+                            {% endif %}
+                        {% else %}
+                            <i class="bi bi-sort" style="opacity: 0.3;"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('advertisers.list_advertisers', sort='net', order='asc' if sort == 'net' and order == 'desc' else 'desc', page=pagination.page, search=search, status=status_filter, agency=agency_filter, assigned=assigned_filter) }}" 
+                       class="text-decoration-none text-dark">
+                        Net Spending
+                        {% if sort == 'net' %}
+                            {% if order == 'desc' %}
+                                <i class="bi bi-sort-down"></i>
+                            {% else %}
+                                <i class="bi bi-sort-up-alt"></i>
+                            {% endif %}
+                        {% else %}
+                            <i class="bi bi-sort" style="opacity: 0.3;"></i>
+                        {% endif %}
+                    </a>
+                </th>
                 <th>Assigned To</th>
                 <th>Actions</th>
             </tr>
@@ -126,6 +168,46 @@
 {% if not advertisers %}
 <div class="alert alert-info mt-4">
     No advertisers found matching your criteria.
+</div>
+{% endif %}
+
+<!-- Pagination -->
+{% if pagination and pagination.pages > 1 %}
+<nav aria-label="Advertiser pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('advertisers.list_advertisers', page=pagination.prev_num, search=search, status=status_filter, agency=agency_filter, assigned=assigned_filter, sort=sort, order=order) }}">Previous</a>
+        </li>
+        {% endif %}
+        
+        {% for page_num in pagination.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+            {% if page_num %}
+                {% if page_num != pagination.page %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('advertisers.list_advertisers', page=page_num, search=search, status=status_filter, agency=agency_filter, assigned=assigned_filter, sort=sort, order=order) }}">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item active">
+                    <span class="page-link">{{ page_num }}</span>
+                </li>
+                {% endif %}
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">...</span>
+            </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if pagination.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('advertisers.list_advertisers', page=pagination.next_num, search=search, status=status_filter, agency=agency_filter, assigned=assigned_filter, sort=sort, order=order) }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+<div class="text-center text-muted mb-4">
+    <small>Showing {{ pagination.page }} of {{ pagination.pages }} pages ({{ pagination.total }} total advertisers)</small>
 </div>
 {% endif %}
 

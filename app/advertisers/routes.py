@@ -11,12 +11,51 @@ from sqlalchemy import func, or_
 @login_required
 def list_advertisers():
     # Get query parameters
+    page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
     status_filter = request.args.get('status', '')
     agency_filter = request.args.get('agency', '')
+    assigned_filter = request.args.get('assigned', '')
+    sort = request.args.get('sort', '')
+    order = request.args.get('order', 'desc')
     
-    # Base query
-    query = Advertiser.query
+    # Base query with spending data aggregation
+    # Subquery to get latest year spending for each advertiser
+    latest_year_subq = db.session.query(
+        SpendingData.advertiser_id,
+        func.max(SpendingData.year).label('latest_year')
+    ).group_by(SpendingData.advertiser_id).subquery()
+    
+    # Subquery to get spending data for latest year
+    latest_spending_subq = db.session.query(
+        SpendingData.advertiser_id,
+        SpendingData.grand_total.label('gross_spending'),
+        func.coalesce(SpendingData.net_total, 
+            SpendingData.tv * 0.2 + 
+            SpendingData.cinema * 0.2 + 
+            SpendingData.radio * 0.3 + 
+            SpendingData.outdoor_static * 0.5 + 
+            SpendingData.billboard * 0.5 + 
+            SpendingData.internet * 0.5 + 
+            SpendingData.magazines * 0.5 + 
+            SpendingData.newspapers * 0.5 + 
+            SpendingData.indoor_tv * 0.5
+        ).label('net_spending')
+    ).join(
+        latest_year_subq,
+        (SpendingData.advertiser_id == latest_year_subq.c.advertiser_id) & 
+        (SpendingData.year == latest_year_subq.c.latest_year)
+    ).subquery()
+    
+    # Main query
+    query = db.session.query(
+        Advertiser,
+        func.coalesce(latest_spending_subq.c.gross_spending, 0).label('last_year_gross'),
+        func.coalesce(latest_spending_subq.c.net_spending, 0).label('last_year_net')
+    ).outerjoin(
+        latest_spending_subq,
+        Advertiser.id == latest_spending_subq.c.advertiser_id
+    )
     
     # Apply filters
     if search:
@@ -28,40 +67,71 @@ def list_advertisers():
         )
     
     if status_filter:
-        query = query.filter_by(lead_status=status_filter)
+        query = query.filter(Advertiser.lead_status == status_filter)
     
     if agency_filter:
-        query = query.filter_by(current_agency=agency_filter)
+        query = query.filter(Advertiser.current_agency == agency_filter)
+    
+    if assigned_filter:
+        if assigned_filter == 'unassigned':
+            query = query.filter(Advertiser.assigned_user_id.is_(None))
+        else:
+            query = query.filter(Advertiser.assigned_user_id == int(assigned_filter))
     
     # Apply role-based filtering
     if not current_user.is_team_lead():
-        query = query.filter_by(assigned_user_id=current_user.id)
+        query = query.filter(Advertiser.assigned_user_id == current_user.id)
     
-    # Get advertisers with their total spending
-    advertisers = query.all()
+    # Apply sorting
+    if sort == 'gross':
+        if order == 'asc':
+            query = query.order_by('last_year_gross')
+        else:
+            query = query.order_by(db.desc('last_year_gross'))
+    elif sort == 'net':
+        if order == 'asc':
+            query = query.order_by('last_year_net')
+        else:
+            query = query.order_by(db.desc('last_year_net'))
+    else:
+        query = query.order_by(Advertiser.name)
+    
+    # Paginate results
+    pagination = query.paginate(page=page, per_page=100, error_out=False)
+    
+    # Process results to add spending attributes
+    advertisers = []
+    for advertiser, gross, net in pagination.items:
+        advertiser.last_year_gross_spending = gross
+        advertiser.last_year_net_spending = net
+        advertisers.append(advertiser)
     
     # Get unique agencies for filter dropdown
     agencies = db.session.query(Advertiser.current_agency).distinct().filter(
         Advertiser.current_agency.isnot(None)
-    ).all()
+    ).order_by(Advertiser.current_agency).all()
     agencies = [a[0] for a in agencies if a[0]]
     
-    # Calculate total spending for each advertiser
-    for advertiser in advertisers:
-        total_spending = db.session.query(
-            func.sum(SpendingData.grand_total)
-        ).filter_by(advertiser_id=advertiser.id).scalar() or 0
-        advertiser.total_spending = total_spending
+    # Get users for assigned filter
+    if current_user.is_team_lead():
+        users = User.query.order_by(User.username).all()
+    else:
+        users = [current_user]
     
     bulk_assign_form = BulkAssignForm() if current_user.is_team_lead() else None
     
     return render_template('advertisers/list.html',
                          advertisers=advertisers,
+                         pagination=pagination,
                          search=search,
                          status_filter=status_filter,
                          agency_filter=agency_filter,
+                         assigned_filter=assigned_filter,
                          agencies=agencies,
+                         users=users,
                          bulk_assign_form=bulk_assign_form,
+                         sort=sort,
+                         order=order,
                          get_lead_status_color=get_lead_status_color)
 
 @bp.route('/<int:id>')

@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.advertisers import bp
 from app.advertisers.forms import AdvertiserForm, LeadStatusForm, BulkAssignForm, SpendingDataForm
-from app.models import Advertiser, SpendingData, Activity, LeadStatusHistory, User
+from app.models import Advertiser, SpendingData, Activity, LeadStatusHistory, User, Contact
 from app.utils import get_lead_status_color
 from sqlalchemy import func, or_
 
@@ -89,11 +89,15 @@ def view_advertiser(id):
         advertiser_id=id
     ).order_by(LeadStatusHistory.changed_at.desc()).all()
     
+    # Get contacts
+    contacts = advertiser.contacts.order_by('last_name', 'first_name').all()
+    
     return render_template('advertisers/view.html',
                          advertiser=advertiser,
                          spending_data=spending_data,
                          activities=activities,
                          status_history=status_history,
+                         contacts=contacts,
                          get_lead_status_color=get_lead_status_color)
 
 @bp.route('/create', methods=['GET', 'POST'])
@@ -284,3 +288,25 @@ def edit_spending(id, year):
                          form=form, 
                          advertiser=advertiser,
                          action='Edit')
+
+@bp.route('/api/advertisers/<int:id>/contacts')
+@login_required
+def api_get_advertiser_contacts(id):
+    """API endpoint to get contacts for an advertiser."""
+    advertiser = Advertiser.query.get_or_404(id)
+    
+    # Check permissions
+    if not current_user.is_team_lead() and advertiser.assigned_user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    contacts = Contact.query.filter_by(advertiser_id=id).order_by(Contact.last_name, Contact.first_name).all()
+    
+    return jsonify({
+        'contacts': [
+            {
+                'id': contact.id,
+                'full_name': contact.full_name
+            }
+            for contact in contacts
+        ]
+    })

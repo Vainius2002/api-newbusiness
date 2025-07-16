@@ -28,7 +28,10 @@
                                 <span class="badge bg-{{ 'primary' if activity.activity_type == 'call' else 'info' if activity.activity_type == 'email' else 'warning' if activity.activity_type == 'meeting' else 'secondary' }}">
                                     {{ activity.activity_type.title() }}
                                 </span>
-                                {{ activity.description }}
+                                {% if activity.contact %}
+                                <span class="text-muted">with {{ activity.contact.full_name }}</span>
+                                {% endif %}
+                                - {{ activity.description }}
                             </p>
                             {% if activity.outcome %}
                             <p class="mb-1 text-muted">
@@ -118,6 +121,13 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="contact_id" class="form-label">Contact (Optional)</label>
+                        <select name="contact_id" id="contact_id" class="form-select">
+                            <option value="0">No specific contact</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="activity_type" class="form-label">Activity Type</label>
                         <select name="activity_type" id="activity_type" class="form-select" required>
                             <option value="call">Call</option>
@@ -145,4 +155,36 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const advertiserSelect = document.getElementById('advertiser_id');
+    const contactSelect = document.getElementById('contact_id');
+    
+    // Load contacts when advertiser is selected
+    advertiserSelect.addEventListener('change', function() {
+        const advertiserId = this.value;
+        
+        // Clear existing options
+        contactSelect.innerHTML = '<option value="0">No specific contact</option>';
+        
+        if (advertiserId) {
+            // Fetch contacts for the selected advertiser
+            fetch(`/api/advertisers/${advertiserId}/contacts`)
+                .then(response => response.json())
+                .then(data => {
+                    data.contacts.forEach(contact => {
+                        const option = document.createElement('option');
+                        option.value = contact.id;
+                        option.textContent = contact.full_name;
+                        contactSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading contacts:', error));
+        }
+    });
+});
+</script>
 {% endblock %}

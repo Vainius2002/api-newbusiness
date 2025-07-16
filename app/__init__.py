@@ -41,6 +41,9 @@ def create_app(config_class=Config):
     from app.reports import bp as reports_bp
     app.register_blueprint(reports_bp, url_prefix='/reports')
     
+    from app.contacts import bp as contacts_bp
+    app.register_blueprint(contacts_bp, url_prefix='/contacts')
+    
     # Create upload folder
     import os
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

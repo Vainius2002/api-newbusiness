@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Contacts - Media Agency Lead Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Contacts</h1>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('contacts.list_contacts') }}" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search by name, email, or advertiser" value="{{ search }}">
+            </div>
+            <div class="col-md-4">
+                <select name="advertiser" class="form-select">
+                    <option value="">All Advertisers</option>
+                    {% for advertiser in advertisers %}
+                    <option value="{{ advertiser.id }}" {% if advertiser_id == advertiser.id %}selected{% endif %}>
+                        {{ advertiser.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ url_for('contacts.list_contacts') }}" class="btn btn-secondary w-100">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Advertiser</th>
+                <th>LinkedIn</th>
+                <th>Added By</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for contact in contacts.items %}
+            <tr>
+                <td>{{ contact.full_name }}</td>
+                <td>
+                    {% if contact.email %}
+                    <a href="mailto:{{ contact.email }}">{{ contact.email }}</a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>{{ contact.phone or '-' }}</td>
+                <td>
+                    <a href="{{ url_for('advertisers.view_advertiser', id=contact.advertiser.id) }}">
+                        {{ contact.advertiser.name }}
+                    </a>
+                </td>
+                <td>
+                    {% if contact.linkedin_url %}
+                    <a href="{{ contact.linkedin_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-linkedin"></i>
+                    </a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>
+                    <small>
+                        {{ contact.added_by.username }}<br>
+                        {{ contact.created_at.strftime('%Y-%m-%d') }}
+                    </small>
+                </td>
+                <td>
+                    {% if current_user.is_team_lead() or contact.advertiser.assigned_user_id == current_user.id %}
+                    <a href="{{ url_for('contacts.edit_contact', id=contact.id) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('contacts.delete_contact', id=contact.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this contact?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if not contacts.items %}
+<div class="alert alert-info mt-4">
+    No contacts found matching your criteria.
+</div>
+{% endif %}
+
+<!-- Pagination -->
+{% if contacts.pages > 1 %}
+<nav aria-label="Contact pagination">
+    <ul class="pagination justify-content-center">
+        {% if contacts.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('contacts.list_contacts', page=contacts.prev_num, search=search, advertiser=advertiser_id) }}">Previous</a>
+        </li>
+        {% endif %}
+        
+        {% for page_num in contacts.iter_pages() %}
+            {% if page_num %}
+                {% if page_num != contacts.page %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('contacts.list_contacts', page=page_num, search=search, advertiser=advertiser_id) }}">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item active">
+                    <span class="page-link">{{ page_num }}</span>
+                </li>
+                {% endif %}
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">...</span>
+            </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if contacts.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('contacts.list_contacts', page=contacts.next_num, search=search, advertiser=advertiser_id) }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}

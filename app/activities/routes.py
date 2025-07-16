@@ -18,11 +18,12 @@ def add_activity(advertiser_id):
         flash('You do not have permission to add activities for this advertiser.', 'warning')
         return redirect(url_for('advertisers.view_advertiser', id=advertiser_id))
     
-    form = ActivityForm()
+    form = ActivityForm(advertiser_id=advertiser_id)
     if form.validate_on_submit():
         activity = Activity(
             advertiser_id=advertiser.id,
             user_id=current_user.id,
+            contact_id=form.contact_id.data if form.contact_id.data != 0 else None,
             activity_type=form.activity_type.data,
             description=form.description.data,
             outcome=form.outcome.data
@@ -108,6 +109,7 @@ def download_attachment(attachment_id):
 def create_activity_modal():
     """Handle activity creation from modal form."""
     advertiser_id = request.form.get('advertiser_id', type=int)
+    contact_id = request.form.get('contact_id', type=int)
     activity_type = request.form.get('activity_type')
     description = request.form.get('description')
     outcome = request.form.get('outcome')
@@ -126,6 +128,7 @@ def create_activity_modal():
     activity = Activity(
         advertiser_id=advertiser.id,
         user_id=current_user.id,
+        contact_id=contact_id if contact_id and contact_id != 0 else None,
         activity_type=activity_type,
         description=description,
         outcome=outcome if outcome else None

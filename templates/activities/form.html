@@ -25,6 +25,18 @@
                     </div>
                     
                     <div class="mb-3">
+                        {{ form.contact_id.label(class="form-label") }}
+                        {{ form.contact_id(class="form-select") }}
+                        {% if form.contact_id.errors %}
+                            <div class="text-danger">
+                                {% for error in form.contact_id.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
                         {{ form.description.label(class="form-label") }}
                         {{ form.description(class="form-control", rows="4") }}
                         {% if form.description.errors %}

@@ -44,6 +44,7 @@ class Advertiser(db.Model):
     activities = db.relationship('Activity', backref='advertiser', lazy='dynamic', cascade='all, delete-orphan')
     status_history = db.relationship('LeadStatusHistory', backref='advertiser', lazy='dynamic', cascade='all, delete-orphan')
     attachments = db.relationship('Attachment', backref='advertiser', lazy='dynamic', cascade='all, delete-orphan')
+    contacts = db.relationship('Contact', backref='advertiser', lazy='dynamic', cascade='all, delete-orphan')
     
     @property
     def latest_spending_data(self):
@@ -100,10 +101,31 @@ class SpendingData(db.Model):
         
         return net
 
+class Contact(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    advertiser_id = db.Column(db.Integer, db.ForeignKey('advertiser.id'), nullable=False)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(200))
+    phone = db.Column(db.String(50))
+    linkedin_url = db.Column(db.String(500))
+    added_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    added_by = db.relationship('User', backref='added_contacts')
+    activities = db.relationship('Activity', backref='contact', lazy='dynamic')
+    
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
 class Activity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     advertiser_id = db.Column(db.Integer, db.ForeignKey('advertiser.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    contact_id = db.Column(db.Integer, db.ForeignKey('contact.id'), nullable=True)  # Optional contact reference
     activity_type = db.Column(db.String(50), nullable=False)  # call, email, meeting, note
     description = db.Column(db.Text)
     outcome = db.Column(db.String(200))

@@ -99,12 +99,16 @@ def list_advertisers():
     # Paginate results
     pagination = query.paginate(page=page, per_page=100, error_out=False)
     
-    # Process results to add spending attributes
+    # Process results to create advertiser data with spending
     advertisers = []
     for advertiser, gross, net in pagination.items:
-        advertiser.last_year_gross_spending = gross
-        advertiser.last_year_net_spending = net
-        advertisers.append(advertiser)
+        # Create a dictionary-like object to hold advertiser and spending data
+        advertiser_data = {
+            'advertiser': advertiser,
+            'last_year_gross_spending': gross,
+            'last_year_net_spending': net
+        }
+        advertisers.append(advertiser_data)
     
     # Get unique agencies for filter dropdown
     agencies = db.session.query(Advertiser.current_agency).distinct().filter(

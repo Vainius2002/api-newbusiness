@@ -113,33 +113,33 @@
             </tr>
         </thead>
         <tbody>
-            {% for advertiser in advertisers %}
+            {% for item in advertisers %}
             <tr>
                 {% if current_user.is_team_lead() %}
                 <td>
-                    <input type="checkbox" name="advertiser_ids[]" value="{{ advertiser.id }}" class="form-check-input advertiser-checkbox">
+                    <input type="checkbox" name="advertiser_ids[]" value="{{ item.advertiser.id }}" class="form-check-input advertiser-checkbox">
                 </td>
                 {% endif %}
                 <td style="max-width: 300px; word-wrap: break-word;">
-                    <a href="{{ url_for('advertisers.view_advertiser', id=advertiser.id) }}">
-                        {{ advertiser.name }}
+                    <a href="{{ url_for('advertisers.view_advertiser', id=item.advertiser.id) }}">
+                        {{ item.advertiser.name }}
                     </a>
                 </td>
-                <td>{{ advertiser.current_agency or '-' }}</td>
+                <td>{{ item.advertiser.current_agency or '-' }}</td>
                 <td>
-                    <span class="lead-status-badge lead-{{ advertiser.lead_status }}">
-                        {{ advertiser.lead_status.replace('_', ' ').title() }}
+                    <span class="lead-status-badge lead-{{ item.advertiser.lead_status }}">
+                        {{ item.advertiser.lead_status.replace('_', ' ').title() }}
                     </span>
                 </td>
-                <td>€{{ "{:,.0f}".format(advertiser.last_year_gross_spending) }}</td>
-                <td>€{{ "{:,.0f}".format(advertiser.last_year_net_spending) }}</td>
-                <td>{{ advertiser.assigned_user.username if advertiser.assigned_user else 'Unassigned' }}</td>
+                <td>€{{ "{:,.0f}".format(item.last_year_gross_spending) }}</td>
+                <td>€{{ "{:,.0f}".format(item.last_year_net_spending) }}</td>
+                <td>{{ item.advertiser.assigned_user.username if item.advertiser.assigned_user else 'Unassigned' }}</td>
                 <td>
-                    <a href="{{ url_for('advertisers.view_advertiser', id=advertiser.id) }}" class="btn btn-sm btn-outline-primary">
+                    <a href="{{ url_for('advertisers.view_advertiser', id=item.advertiser.id) }}" class="btn btn-sm btn-outline-primary">
                         <i class="bi bi-eye"></i>
                     </a>
                     {% if current_user.is_team_lead() %}
-                    <a href="{{ url_for('advertisers.edit_advertiser', id=advertiser.id) }}" class="btn btn-sm btn-outline-secondary">
+                    <a href="{{ url_for('advertisers.edit_advertiser', id=item.advertiser.id) }}" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-pencil"></i>
                     </a>
                     {% endif %}

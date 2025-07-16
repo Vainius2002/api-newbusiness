@@ -16,7 +16,7 @@ def list_advertisers():
     status_filter = request.args.get('status', '')
     agency_filter = request.args.get('agency', '')
     assigned_filter = request.args.get('assigned', '')
-    sort = request.args.get('sort', '')
+    sort = request.args.get('sort', 'net')  # Default to net spending
     order = request.args.get('order', 'desc')
     
     # Base query with spending data aggregation

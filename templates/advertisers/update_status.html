@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Update Status - {{ advertiser.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h1 class="mb-4">Update Lead Status</h1>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">{{ advertiser.name }}</h5>
+                <p class="card-text">
+                    Current Status: 
+                    <span class="lead-status-badge lead-{{ advertiser.lead_status }}">
+                        {{ advertiser.lead_status.replace('_', ' ').title() }}
+                    </span>
+                </p>
+                {% if advertiser.current_agency %}
+                <p class="card-text">
+                    <small class="text-muted">Current Agency: {{ advertiser.current_agency }}</small>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.new_status.label(class="form-label") }}
+                        {{ form.new_status(class="form-select") }}
+                        {% if form.new_status.errors %}
+                            <div class="text-danger">
+                                {% for error in form.new_status.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.reason.label(class="form-label") }}
+                        {{ form.reason(class="form-control", rows="3", placeholder="Optional: Explain the reason for this status change") }}
+                        {% if form.reason.errors %}
+                            <div class="text-danger">
+                                {% for error in form.reason.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('advertisers.view_advertiser', id=advertiser.id) }}" class="btn btn-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Spending Data - {{ advertiser.name }} - Media Agency Lead Management{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1>{{ action }} Spending Data</h1>
+    <p class="text-muted">{{ advertiser.name }}</p>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.year.label(class="form-label") }}
+                        {{ form.year(class="form-control" if not form.year.errors else "form-control is-invalid") }}
+                        {% if form.year.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.year.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <h5 class="mb-3">Media Spending (Gross)</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.cinema.label(class="form-label") }}
+                            {{ form.cinema(class="form-control", placeholder="0") }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.tv.label(class="form-label") }}
+                            {{ form.tv(class="form-control", placeholder="0") }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.radio.label(class="form-label") }}
+                            {{ form.radio(class="form-control", placeholder="0") }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.internet.label(class="form-label") }}
+                            {{ form.internet(class="form-control", placeholder="0") }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.outdoor_static.label(class="form-label") }}
+                            {{ form.outdoor_static(class="form-control", placeholder="0") }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.billboard.label(class="form-label") }}
+                            {{ form.billboard(class="form-control", placeholder="0") }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.magazines.label(class="form-label") }}
+                            {{ form.magazines(class="form-control", placeholder="0") }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.newspapers.label(class="form-label") }}
+                            {{ form.newspapers(class="form-control", placeholder="0") }}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.indoor_tv.label(class="form-label") }}
+                            {{ form.indoor_tv(class="form-control", placeholder="0") }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.grand_total.label(class="form-label") }}
+                        {{ form.grand_total(class="form-control", placeholder="0") }}
+                        <small class="form-text text-muted">Total gross spending across all media</small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        {{ form.net_total.label(class="form-label") }}
+                        {{ form.net_total(class="form-control", placeholder="Leave empty to calculate automatically") }}
+                        <small class="form-text text-muted">
+                            Leave empty to calculate automatically using standard discounts:
+                            TV/Cinema: -80%, Radio: -70%, Outdoor: -50%, Others: -50%
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('advertisers.view_advertiser', id=advertiser.id) }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

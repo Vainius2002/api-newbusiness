@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Upload CSV - Media Agency Lead Management{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h1 class="mb-4">Import CSV Data</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select CSV File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
+                        <div class="form-text">
+                            Upload a tab-separated CSV file with advertiser spending data.
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6>Expected CSV Format:</h6>
+                        <ul class="mb-0">
+                            <li>Supported encodings: UTF-8, UTF-16, Latin-1, CP1252</li>
+                            <li>Supported separators: Tab, Comma, Semicolon</li>
+                            <li>Columns: A_ADVER_E, Year of date, CINEMA, FILLBOARD, INDOOR TV, INTERNET, MAGAZINES, NEWSPAPERS, OUTDOOR STATIC, RADIO, TV, Grand Total</li>
+                            <li>Numeric values can contain spaces and thousands separators (will be cleaned automatically)</li>
+                            <li>Empty cells will be treated as 0</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-exclamation-triangle"></i> Important: Data Overwrite Behavior</h6>
+                        <p class="mb-0">
+                            <strong>All existing spending data for advertisers in the CSV will be completely overwritten.</strong> 
+                            This means if an advertiser previously had 5 years of data but your CSV only contains 2 years, 
+                            the 3 missing years will be deleted. Other advertisers not in the CSV will remain unchanged.
+                        </p>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Upload and Import
+                    </button>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Media Agency Lead Management{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h1 class="mb-4">{{ title }}</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control") }}
+                        {% if form.name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.current_agency.label(class="form-label") }}
+                        {{ form.current_agency(class="form-select") }}
+                        {% if form.current_agency.errors %}
+                            <div class="text-danger">
+                                {% for error in form.current_agency.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.lead_status.label(class="form-label") }}
+                                {{ form.lead_status(class="form-select") }}
+                                {% if form.lead_status.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.lead_status.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.assigned_user_id.label(class="form-label") }}
+                                {{ form.assigned_user_id(class="form-select") }}
+                                {% if form.assigned_user_id.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.assigned_user_id.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('advertisers.list_advertisers') }}" class="btn btn-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

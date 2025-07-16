@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Add Activity - {{ advertiser.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h1 class="mb-4">Add Activity - {{ advertiser.name }}</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.activity_type.label(class="form-label") }}
+                        {{ form.activity_type(class="form-select") }}
+                        {% if form.activity_type.errors %}
+                            <div class="text-danger">
+                                {% for error in form.activity_type.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="4") }}
+                        {% if form.description.errors %}
+                            <div class="text-danger">
+                                {% for error in form.description.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.outcome.label(class="form-label") }}
+                        {{ form.outcome(class="form-control") }}
+                        {% if form.outcome.errors %}
+                            <div class="text-danger">
+                                {% for error in form.outcome.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.attachment.label(class="form-label") }}
+                        {{ form.attachment(class="form-control") }}
+                        {% if form.attachment.errors %}
+                            <div class="text-danger">
+                                {% for error in form.attachment.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Optional: Upload supporting documents (PDF, DOC, DOCX, TXT, or images)
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('advertisers.view_advertiser', id=advertiser.id) }}" class="btn btn-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

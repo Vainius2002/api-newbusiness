@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Media Agency Lead Management{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row mb-4">
+    <div class="col-md-12 mb-3">
+        <div class="d-flex flex-wrap gap-2">
+            <!-- Hot Leads -->
+            <a href="{{ url_for('advertisers.list_advertisers', status='hot') }}" class="text-decoration-none">
+                <div class="card text-white bg-danger" style="min-width: 150px;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Hot Leads</h5>
+                        <h2 class="mb-0">{{ lead_status_counts.get('hot', 0) }}</h2>
+                    </div>
+                </div>
+            </a>
+            
+            <!-- Warm Leads -->
+            <a href="{{ url_for('advertisers.list_advertisers', status='warm') }}" class="text-decoration-none">
+                <div class="card text-dark bg-warning" style="min-width: 150px;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Warm Leads</h5>
+                        <h2 class="mb-0">{{ lead_status_counts.get('warm', 0) }}</h2>
+                    </div>
+                </div>
+            </a>
+            
+            <!-- Cold Leads -->
+            <a href="{{ url_for('advertisers.list_advertisers', status='cold') }}" class="text-decoration-none">
+                <div class="card text-white bg-primary" style="min-width: 150px;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Cold Leads</h5>
+                        <h2 class="mb-0">{{ lead_status_counts.get('cold', 0) }}</h2>
+                    </div>
+                </div>
+            </a>
+            
+            <!-- Ours -->
+            <a href="{{ url_for('advertisers.list_advertisers', status='ours') }}" class="text-decoration-none">
+                <div class="card text-white bg-success" style="min-width: 150px;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Ours</h5>
+                        <h2 class="mb-0">{{ lead_status_counts.get('ours', 0) }}</h2>
+                    </div>
+                </div>
+            </a>
+            
+            <!-- Non-qualified -->
+            <a href="{{ url_for('advertisers.list_advertisers', status='non_qualified') }}" class="text-decoration-none">
+                <div class="card text-white bg-secondary" style="min-width: 150px;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Non-qualified</h5>
+                        <h2 class="mb-0">{{ lead_status_counts.get('non_qualified', 0) }}</h2>
+                    </div>
+                </div>
+            </a>
+            
+            <!-- Lost -->
+            <a href="{{ url_for('advertisers.list_advertisers', status='lost') }}" class="text-decoration-none">
+                <div class="card text-white bg-dark" style="min-width: 150px;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Lost</h5>
+                        <h2 class="mb-0">{{ lead_status_counts.get('lost', 0) }}</h2>
+                    </div>
+                </div>
+            </a>
+            
+            <!-- Non-Market -->
+            <a href="{{ url_for('advertisers.list_advertisers', status='non_market') }}" class="text-decoration-none">
+                <div class="card text-dark bg-light border" style="min-width: 150px;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Non-Market</h5>
+                        <h2 class="mb-0">{{ lead_status_counts.get('non_market', 0) }}</h2>
+                    </div>
+                </div>
+            </a>
+            
+            <!-- Total Advertisers -->
+            <a href="{{ url_for('advertisers.list_advertisers') }}" class="text-decoration-none">
+                <div class="card text-white bg-info" style="min-width: 150px;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Total</h5>
+                        <h2 class="mb-0">{{ total_advertisers }}</h2>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Activities</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_activities %}
+                <div class="list-group">
+                    {% for activity in recent_activities %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ activity.advertiser.name }}</h6>
+                            <small>{{ activity.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        <p class="mb-1">
+                            <span class="badge bg-secondary">{{ activity.activity_type }}</span>
+                            {{ activity.description[:100] }}{% if activity.description|length > 100 %}...{% endif %}
+                        </p>
+                        <small>By {{ activity.user.username }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No recent activities</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Top Spenders</h5>
+            </div>
+            <div class="card-body">
+                {% if top_spenders %}
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Advertiser</th>
+                            <th class="text-end">Total Spend</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for spender in top_spenders %}
+                        <tr>
+                            <td>{{ spender[0] }}</td>
+                            <td class="text-end">€{{ "{:,.0f}".format(spender[1]) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted">No spending data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ url_for('advertisers.list_advertisers') }}" class="btn btn-primary">
+        <i class="bi bi-building"></i> View All Advertisers
+    </a>
+    {% if current_user.is_team_lead() %}
+    <a href="{{ url_for('advertisers.create_advertiser') }}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Add New Advertiser
+    </a>
+    {% endif %}
+    {% if current_user.is_admin() %}
+    <a href="{{ url_for('main.upload_csv') }}" class="btn btn-info">
+        <i class="bi bi-upload"></i> Import CSV Data
+    </a>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}{{ advertiser.name }} - Media Agency Lead Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ advertiser.name }}</h1>
+    <div>
+        {% if current_user.is_team_lead() %}
+        <a href="{{ url_for('advertisers.edit_advertiser', id=advertiser.id) }}" class="btn btn-secondary">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+        {% endif %}
+        <a href="{{ url_for('advertisers.update_status', id=advertiser.id) }}" class="btn btn-primary">
+            <i class="bi bi-flag"></i> Update Status
+        </a>
+        <a href="{{ url_for('activities.add_activity', advertiser_id=advertiser.id) }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Add Activity
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-5">Current Agency:</dt>
+                    <dd class="col-sm-7">{{ advertiser.current_agency or 'N/A' }}</dd>
+                    
+                    <dt class="col-sm-5">Lead Status:</dt>
+                    <dd class="col-sm-7">
+                        <span class="lead-status-badge lead-{{ advertiser.lead_status }}">
+                            {{ advertiser.lead_status.replace('_', ' ').title() }}
+                        </span>
+                    </dd>
+                    
+                    <dt class="col-sm-5">Assigned To:</dt>
+                    <dd class="col-sm-7">{{ advertiser.assigned_user.username if advertiser.assigned_user else 'Unassigned' }}</dd>
+                    
+                    <dt class="col-sm-5">Created:</dt>
+                    <dd class="col-sm-7">{{ advertiser.created_at.strftime('%Y-%m-%d') }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Spending Data by Year</h5>
+                {% if current_user.is_team_lead() %}
+                <a href="{{ url_for('advertisers.add_spending', id=advertiser.id) }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add Spending
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if spending_data %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Cinema</th>
+                                <th>Internet</th>
+                                <th>TV</th>
+                                <th>Radio</th>
+                                <th>Outdoor</th>
+                                <th>Gross Total</th>
+                                <th>Net Total</th>
+                                {% if current_user.is_team_lead() %}
+                                <th>Actions</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in spending_data %}
+                            <tr>
+                                <td>{{ data.year }}</td>
+                                <td>€{{ "{:,.0f}".format(data.cinema) }}</td>
+                                <td>€{{ "{:,.0f}".format(data.internet) }}</td>
+                                <td>€{{ "{:,.0f}".format(data.tv) }}</td>
+                                <td>€{{ "{:,.0f}".format(data.radio) }}</td>
+                                <td>€{{ "{:,.0f}".format(data.outdoor_static) }}</td>
+                                <td><strong>€{{ "{:,.0f}".format(data.grand_total) }}</strong></td>
+                                <td>
+                                    <strong>€{{ "{:,.0f}".format(data.calculated_net_total) }}</strong>
+                                    {% if data.net_total is none %}
+                                    <small class="text-muted">(est.)</small>
+                                    {% endif %}
+                                </td>
+                                {% if current_user.is_team_lead() %}
+                                <td>
+                                    <a href="{{ url_for('advertisers.edit_spending', id=advertiser.id, year=data.year) }}" 
+                                       class="btn btn-sm btn-outline-secondary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No spending data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Activities</h5>
+            </div>
+            <div class="card-body">
+                {% if activities %}
+                <div class="timeline">
+                    {% for activity in activities %}
+                    <div class="mb-3 pb-3 border-bottom">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="mb-1">
+                                <span class="badge bg-secondary">{{ activity.activity_type }}</span>
+                                {{ activity.user.username }}
+                            </h6>
+                            <small class="text-muted">{{ activity.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        <p class="mb-1">{{ activity.description }}</p>
+                        {% if activity.outcome %}
+                        <p class="mb-0"><small><strong>Outcome:</strong> {{ activity.outcome }}</small></p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No activities recorded</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Status History</h5>
+            </div>
+            <div class="card-body">
+                {% if status_history %}
+                <div class="timeline">
+                    {% for history in status_history %}
+                    <div class="mb-3 pb-3 border-bottom">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="mb-1">
+                                <span class="lead-status-badge lead-{{ history.old_status }}">{{ history.old_status }}</span>
+                                →
+                                <span class="lead-status-badge lead-{{ history.new_status }}">{{ history.new_status }}</span>
+                            </h6>
+                            <small class="text-muted">{{ history.changed_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        <p class="mb-0"><small>By {{ history.changed_by_user.username }}</small></p>
+                        {% if history.reason %}
+                        <p class="mb-0"><small>{{ history.reason }}</small></p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No status changes recorded</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

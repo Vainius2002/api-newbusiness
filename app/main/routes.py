@@ -13,6 +13,10 @@ from sqlalchemy import func, desc, case
 @bp.route('/index')
 @login_required
 def index():
+    # Get pagination parameters
+    leads_page = request.args.get('leads_page', 1, type=int)
+    activities_page = request.args.get('activities_page', 1, type=int)
+    
     # Get dashboard statistics
     total_advertisers = Advertiser.query.count()
     
@@ -22,10 +26,13 @@ def index():
         func.count(Advertiser.id)
     ).group_by(Advertiser.lead_status).all()
     
-    # Recent activities
-    recent_activities = Activity.query.order_by(
+    # Recent activities with pagination
+    recent_activities_query = Activity.query.order_by(
         Activity.created_at.desc()
-    ).limit(10).all()
+    )
+    recent_activities = recent_activities_query.paginate(
+        page=activities_page, per_page=50, error_out=False
+    )
     
     # Get leads needing attention (hot, warm, cold) with their last activity date
     # Subquery to get last activity date for each advertiser
@@ -35,7 +42,7 @@ def index():
     ).group_by(Activity.advertiser_id).subquery()
     
     # Get hot, warm, and cold leads with their details
-    leads_needing_attention = db.session.query(
+    leads_query = db.session.query(
         Advertiser,
         last_activity_subq.c.last_activity_date
     ).outerjoin(
@@ -44,20 +51,19 @@ def index():
     ).filter(
         Advertiser.lead_status.in_(['hot', 'warm', 'cold'])
     ).order_by(
-        # Sort by priority (hot first, then warm, then cold)
-        case(
-            (Advertiser.lead_status == 'hot', 1),
-            (Advertiser.lead_status == 'warm', 2),
-            (Advertiser.lead_status == 'cold', 3)
-        ),
-        # Then by oldest activity first (nulls first)
+        # Sort by oldest activity first (nulls first)
         func.coalesce(last_activity_subq.c.last_activity_date, func.datetime('1900-01-01')).asc()
-    ).all()
+    )
+    
+    # Paginate the leads
+    leads_paginated = leads_query.paginate(
+        page=leads_page, per_page=50, error_out=False
+    )
     
     # Calculate days ago for each lead
     leads_with_days_ago = []
     today = datetime.utcnow()
-    for advertiser, last_activity_date in leads_needing_attention:
+    for advertiser, last_activity_date in leads_paginated.items:
         if last_activity_date:
             days_ago = (today - last_activity_date).days
             days_ago_str = f"{days_ago} days ago" if days_ago != 1 else "1 day ago"
@@ -77,7 +83,8 @@ def index():
                          total_advertisers=total_advertisers,
                          lead_status_counts=dict(lead_status_counts),
                          recent_activities=recent_activities,
-                         leads_needing_attention=leads_with_days_ago)
+                         leads_needing_attention=leads_with_days_ago,
+                         leads_pagination=leads_paginated)
 
 @bp.route('/upload', methods=['GET', 'POST'])
 @login_required

@@ -103,7 +103,11 @@
                     {% for activity in recent_activities %}
                     <div class="list-group-item">
                         <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">{{ activity.advertiser.name }}</h6>
+                            <h6 class="mb-1">
+                                <a href="{{ url_for('advertisers.view_advertiser', id=activity.advertiser.id) }}" class="text-decoration-none">
+                                    {{ activity.advertiser.name }}
+                                </a>
+                            </h6>
                             <small>{{ activity.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                         </div>
                         <p class="mb-1">
@@ -123,28 +127,51 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Top Spenders</h5>
+                <h5 class="mb-0">Leads Activities Status</h5>
             </div>
             <div class="card-body">
-                {% if top_spenders %}
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Advertiser</th>
-                            <th class="text-end">Total Spend</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for spender in top_spenders %}
-                        <tr>
-                            <td>{{ spender[0] }}</td>
-                            <td class="text-end">€{{ "{:,.0f}".format(spender[1]) }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                {% if leads_needing_attention %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Advertiser</th>
+                                <th>Status</th>
+                                <th>Assigned To</th>
+                                <th>Last Activity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lead_data in leads_needing_attention[:15] %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('advertisers.view_advertiser', id=lead_data.advertiser.id) }}" class="text-decoration-none">
+                                        {{ lead_data.advertiser.name[:30] }}{% if lead_data.advertiser.name|length > 30 %}...{% endif %}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="lead-status-badge lead-{{ lead_data.advertiser.lead_status }}">
+                                        {{ lead_data.advertiser.lead_status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ lead_data.advertiser.assigned_user.username if lead_data.advertiser.assigned_user else 'Unassigned' }}</small>
+                                </td>
+                                <td>
+                                    <small class="{% if lead_data.last_activity == 'Never' or lead_data.days_ago_num > 30 %}text-danger{% elif lead_data.days_ago_num > 14 %}text-warning{% else %}text-muted{% endif %}">
+                                        {{ lead_data.last_activity }}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if leads_needing_attention|length > 15 %}
+                <p class="text-muted mt-2 mb-0"><small>Showing 15 of {{ leads_needing_attention|length }} leads needing attention</small></p>
+                {% endif %}
                 {% else %}
-                <p class="text-muted">No spending data available</p>
+                <p class="text-muted">No hot, warm, or cold leads found</p>
                 {% endif %}
             </div>
         </div>

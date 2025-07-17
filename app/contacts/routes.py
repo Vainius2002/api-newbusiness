@@ -66,6 +66,9 @@ def add_contact(advertiser_id):
         return redirect(url_for('advertisers.view_advertiser', id=advertiser_id))
     
     form = ContactForm()
+    # Remove advertiser_id field for add form since we already have it from the URL
+    del form.advertiser_id
+    
     if form.validate_on_submit():
         contact = Contact(
             advertiser_id=advertiser.id,

@@ -8,5 +8,5 @@ class ContactForm(FlaskForm):
     email = StringField('Email', validators=[Optional()])
     phone = StringField('Phone Number', validators=[Optional()])
     linkedin_url = StringField('LinkedIn Profile URL', validators=[Optional(), URL()])
-    advertiser_id = SelectField('Advertiser', coerce=int, validators=[DataRequired()])
+    advertiser_id = SelectField('Advertiser', coerce=int, validators=[Optional()])
     submit = SubmitField('Save Contact')

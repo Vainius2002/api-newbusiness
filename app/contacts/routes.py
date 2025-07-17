@@ -46,7 +46,7 @@ def list_contacts():
     
     # Paginate results
     contacts = query.order_by(Contact.last_name, Contact.first_name).paginate(
-        page=page, per_page=20, error_out=False
+        page=page, per_page=100, error_out=False
     )
     
     return render_template('contacts/list.html',
@@ -99,16 +99,28 @@ def edit_contact(id):
         return redirect(url_for('advertisers.view_advertiser', id=advertiser.id))
     
     form = ContactForm(obj=contact)
+    
+    # Populate advertiser choices
+    if current_user.is_team_lead():
+        advertisers = Advertiser.query.order_by(Advertiser.name).all()
+    else:
+        advertisers = Advertiser.query.filter_by(
+            assigned_user_id=current_user.id
+        ).order_by(Advertiser.name).all()
+    
+    form.advertiser_id.choices = [(a.id, a.name) for a in advertisers]
+    
     if form.validate_on_submit():
         contact.first_name = form.first_name.data
         contact.last_name = form.last_name.data
         contact.email = form.email.data
         contact.phone = form.phone.data
         contact.linkedin_url = form.linkedin_url.data
+        contact.advertiser_id = form.advertiser_id.data
         db.session.commit()
         
         flash('Contact updated successfully!', 'success')
-        return redirect(url_for('advertisers.view_advertiser', id=advertiser.id))
+        return redirect(url_for('advertisers.view_advertiser', id=contact.advertiser_id))
     
     return render_template('contacts/form.html',
                          form=form,

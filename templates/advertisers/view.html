@@ -139,6 +139,19 @@
                         {% if activity.outcome %}
                         <p class="mb-0"><small><strong>Outcome:</strong> {{ activity.outcome }}</small></p>
                         {% endif %}
+                        {% if activity.attachments.count() > 0 %}
+                        <p class="mb-0">
+                            <small>
+                                <strong>Attachments:</strong>
+                                {% for attachment in activity.attachments %}
+                                <a href="{{ url_for('activities.download_attachment', attachment_id=attachment.id) }}" class="text-decoration-none">
+                                    <i class="bi bi-paperclip"></i> {{ attachment.filename }}
+                                </a>
+                                {% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </small>
+                        </p>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -254,6 +267,56 @@
                 </div>
                 {% else %}
                 <p class="text-muted">No contacts added yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Attachments</h5>
+            </div>
+            <div class="card-body">
+                {% if attachments %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>Related Activity</th>
+                                <th>Uploaded By</th>
+                                <th>Upload Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attachment in attachments %}
+                            <tr>
+                                <td>{{ attachment.filename }}</td>
+                                <td>
+                                    {% if attachment.activity %}
+                                    <small>{{ attachment.activity.activity_type.title() }} - {{ attachment.activity.created_at.strftime('%Y-%m-%d') }}</small>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ attachment.uploaded_by.username }}</td>
+                                <td>{{ attachment.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <a href="{{ url_for('activities.download_attachment', attachment_id=attachment.id) }}" class="btn btn-sm btn-outline-primary" title="Download">
+                                        <i class="bi bi-download"></i> Download
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No attachments uploaded yet</p>
                 {% endif %}
             </div>
         </div>

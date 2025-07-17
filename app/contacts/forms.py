@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
+from wtforms import StringField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Optional, URL
 
 class ContactForm(FlaskForm):
@@ -8,4 +8,5 @@ class ContactForm(FlaskForm):
     email = StringField('Email', validators=[Optional()])
     phone = StringField('Phone Number', validators=[Optional()])
     linkedin_url = StringField('LinkedIn Profile URL', validators=[Optional(), URL()])
+    advertiser_id = SelectField('Advertiser', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Save Contact')

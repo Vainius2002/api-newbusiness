@@ -6,7 +6,7 @@ from datetime import datetime
 from app import db
 from app.activities import bp
 from app.activities.forms import ActivityForm
-from app.models import Activity, Advertiser, Attachment
+from app.models import Activity, Advertiser, Attachment, User, Contact
 
 @bp.route('/add/<int:advertiser_id>', methods=['GET', 'POST'])
 @login_required
@@ -29,20 +29,22 @@ def add_activity(advertiser_id):
             outcome=form.outcome.data
         )
         db.session.add(activity)
+        db.session.flush()  # Flush to get the activity ID
         
         # Handle file attachment if provided
         if form.attachment.data:
             file = form.attachment.data
-            filename = secure_filename(file.filename)
+            original_filename = secure_filename(file.filename)
             # Add timestamp to filename to avoid conflicts
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"{timestamp}_{filename}"
-            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            saved_filename = f"{timestamp}_{original_filename}"
+            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], saved_filename)
             file.save(filepath)
             
             attachment = Attachment(
                 advertiser_id=advertiser.id,
-                filename=file.filename,
+                activity_id=activity.id,  # Link to the activity
+                filename=original_filename,  # Store original filename for display
                 file_path=filepath,
                 uploaded_by_id=current_user.id
             )
@@ -61,16 +63,32 @@ def add_activity(advertiser_id):
 def activity_feed():
     # Get query parameters
     page = request.args.get('page', 1, type=int)
-    per_page = 20
+    search = request.args.get('search', '')
+    user_filter = request.args.get('user', type=int)
+    per_page = 50
     
     # Base query
-    query = Activity.query
+    query = Activity.query.join(Advertiser)
     
     # Filter by user if not team lead
     if not current_user.is_team_lead():
-        query = query.join(Advertiser).filter(
-            Advertiser.assigned_user_id == current_user.id
-        )
+        query = query.filter(Advertiser.assigned_user_id == current_user.id)
+    
+    # Apply search filter
+    if search:
+        query = query.filter(
+            db.or_(
+                Activity.description.contains(search),
+                Activity.outcome.contains(search),
+                Advertiser.name.contains(search),
+                Contact.first_name.contains(search),
+                Contact.last_name.contains(search)
+            )
+        ).outerjoin(Contact, Activity.contact_id == Contact.id)
+    
+    # Apply user filter
+    if user_filter:
+        query = query.filter(Activity.user_id == user_filter)
     
     # Paginate results
     activities = query.order_by(
@@ -80,14 +98,20 @@ def activity_feed():
     # Get all advertisers for the modal form
     if current_user.is_team_lead():
         all_advertisers = Advertiser.query.order_by(Advertiser.name).all()
+        # Get all users for filter dropdown
+        all_users = User.query.order_by(User.username).all()
     else:
         all_advertisers = Advertiser.query.filter_by(
             assigned_user_id=current_user.id
         ).order_by(Advertiser.name).all()
+        all_users = [current_user]
     
     return render_template('activities/feed.html', 
                          activities=activities,
-                         all_advertisers=all_advertisers)
+                         all_advertisers=all_advertisers,
+                         all_users=all_users,
+                         search=search,
+                         user_filter=user_filter)
 
 @bp.route('/download/<int:attachment_id>')
 @login_required

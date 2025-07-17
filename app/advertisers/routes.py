@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.advertisers import bp
 from app.advertisers.forms import AdvertiserForm, LeadStatusForm, BulkAssignForm, SpendingDataForm
-from app.models import Advertiser, SpendingData, Activity, LeadStatusHistory, User, Contact
+from app.models import Advertiser, SpendingData, Activity, LeadStatusHistory, User, Contact, Attachment
 from app.utils import get_lead_status_color
 from sqlalchemy import func, or_
 
@@ -166,12 +166,16 @@ def view_advertiser(id):
     # Get contacts
     contacts = advertiser.contacts.order_by('last_name', 'first_name').all()
     
+    # Get attachments
+    attachments = advertiser.attachments.order_by(Attachment.uploaded_at.desc()).all()
+    
     return render_template('advertisers/view.html',
                          advertiser=advertiser,
                          spending_data=spending_data,
                          activities=activities,
                          status_history=status_history,
                          contacts=contacts,
+                         attachments=attachments,
                          get_lead_status_color=get_lead_status_color)
 
 @bp.route('/create', methods=['GET', 'POST'])

@@ -130,6 +130,9 @@ class Activity(db.Model):
     description = db.Column(db.Text)
     outcome = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    attachments = db.relationship('Attachment', backref='activity', lazy='dynamic')
 
 class LeadStatusHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -143,6 +146,7 @@ class LeadStatusHistory(db.Model):
 class Attachment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     advertiser_id = db.Column(db.Integer, db.ForeignKey('advertiser.id'), nullable=False)
+    activity_id = db.Column(db.Integer, db.ForeignKey('activity.id'), nullable=True)
     filename = db.Column(db.String(255), nullable=False)
     file_path = db.Column(db.String(500), nullable=False)
     uploaded_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

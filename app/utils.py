@@ -202,7 +202,9 @@ def get_lead_status_color(status):
     colors = {
         'non_qualified': 'secondary',
         'ours': 'success',
+        'network': 'teal',
         'cold': 'primary',
+        'get_info': 'info',
         'warm': 'warning',
         'hot': 'danger',
         'lost': 'dark',

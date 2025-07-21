@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Media Agency Lead Management{% endblock %}</title>
+    <title>{% block title %}BPN New Business{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -18,7 +18,9 @@
         }
         .lead-non_qualified { background-color: #6c757d; color: white; }
         .lead-ours { background-color: #28a745; color: white; }
+        .lead-network { background-color: #20c997; color: white; }
         .lead-cold { background-color: #007bff; color: white; }
+        .lead-get_info { background-color: #17a2b8; color: white; }
         .lead-warm { background-color: #ffc107; color: black; }
         .lead-hot { background-color: #dc3545; color: white; }
         .lead-lost { background-color: #343a40; color: white; }
@@ -30,7 +32,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <i class="bi bi-briefcase-fill"></i> Lead Management
+                <i class="bi bi-briefcase-fill"></i> BPN New Business
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -113,5 +115,6 @@
     </div>
 
     {% block extra_js %}{% endblock %}
+    <center><small><small>(C) 2025 BPN</small></small></center>
 </body>
 </html>

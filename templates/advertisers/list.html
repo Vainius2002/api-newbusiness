@@ -23,7 +23,9 @@
                     <option value="">All Statuses</option>
                     <option value="non_qualified" {% if status_filter == 'non_qualified' %}selected{% endif %}>Non Qualified</option>
                     <option value="ours" {% if status_filter == 'ours' %}selected{% endif %}>Ours</option>
+                    <option value="network" {% if status_filter == 'network' %}selected{% endif %}>Network</option>
                     <option value="cold" {% if status_filter == 'cold' %}selected{% endif %}>Cold Leads</option>
+                    <option value="get_info" {% if status_filter == 'get_info' %}selected{% endif %}>Get Info</option>
                     <option value="warm" {% if status_filter == 'warm' %}selected{% endif %}>Warm Leads</option>
                     <option value="hot" {% if status_filter == 'hot' %}selected{% endif %}>Hot Leads</option>
                     <option value="lost" {% if status_filter == 'lost' %}selected{% endif %}>Lost</option>

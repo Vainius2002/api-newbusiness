@@ -34,7 +34,7 @@ class Advertiser(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), unique=True, nullable=False)
     current_agency = db.Column(db.String(200))
-    lead_status = db.Column(db.String(20), default='non_qualified')  # non_qualified, ours, cold, warm, hot, lost, non_market
+    lead_status = db.Column(db.String(20), default='non_qualified')  # non_qualified, ours, cold, warm, hot, lost, non_market, get_info, network
     assigned_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

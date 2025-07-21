@@ -49,7 +49,7 @@ def index():
         last_activity_subq,
         Advertiser.id == last_activity_subq.c.advertiser_id
     ).filter(
-        Advertiser.lead_status.in_(['hot', 'warm', 'cold'])
+        Advertiser.lead_status.in_(['hot', 'warm', 'cold', 'get_info'])
     ).order_by(
         # Sort by oldest activity first (nulls first)
         func.coalesce(last_activity_subq.c.last_activity_date, func.datetime('1900-01-01')).asc()

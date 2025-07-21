@@ -30,7 +30,9 @@ class AdvertiserForm(FlaskForm):
                             choices=[
                                 ('non_qualified', 'Non Qualified'),
                                 ('ours', 'Ours'),
+                                ('network', 'Network'),
                                 ('cold', 'Cold Leads'),
+                                ('get_info', 'Get Info'),
                                 ('warm', 'Warm Leads'),
                                 ('hot', 'Hot Leads'),
                                 ('lost', 'Lost'),
@@ -51,7 +53,9 @@ class LeadStatusForm(FlaskForm):
                            choices=[
                                ('non_qualified', 'Non Qualified'),
                                ('ours', 'Ours'),
+                               ('network', 'Network'),
                                ('cold', 'Cold Leads'),
+                               ('get_info', 'Get Info'),
                                ('warm', 'Warm Leads'),
                                ('hot', 'Hot Leads'),
                                ('lost', 'Lost'),

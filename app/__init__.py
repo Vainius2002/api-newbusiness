@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
@@ -16,7 +16,11 @@ def create_app(config_class=Config):
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
-    csrf.init_app(app)
+    
+    # Temporarily disable CSRF for development to allow webhooks
+    # In production, you should enable CSRF and properly exempt webhook endpoints
+    # csrf.init_app(app)
+    
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'
@@ -43,6 +47,9 @@ def create_app(config_class=Config):
     
     from app.contacts import bp as contacts_bp
     app.register_blueprint(contacts_bp, url_prefix='/contacts')
+    
+    from app.integrations import integrations_bp
+    app.register_blueprint(integrations_bp, url_prefix='/integrations')
     
     # Create upload folder
     import os

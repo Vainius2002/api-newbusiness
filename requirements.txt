@@ -9,3 +9,4 @@ Werkzeug==3.0.1
 pandas==2.1.4
 plotly==5.18.0
 gunicorn==21.2.0
+requests==2.32.5

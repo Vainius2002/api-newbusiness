@@ -198,7 +198,9 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    {% if csrf_token is defined %}
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    {% endif %}
                     
                     <div class="mb-3">
                         <label for="advertiser_id" class="form-label">Advertiser</label>

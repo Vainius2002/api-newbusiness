@@ -120,6 +120,23 @@ class Contact(db.Model):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
+    
+    def get_related_advertisers(self):
+        """Get all advertisers related to this contact (primary + relationships via activities)"""
+        # Start with primary advertiser
+        related_advertisers = [self.advertiser]
+        
+        # Find other advertisers mentioned in contact activities
+        contact_activities = Activity.query.filter(
+            Activity.description.contains(f"{self.first_name} {self.last_name}"),
+            Activity.advertiser_id != self.advertiser_id  # Exclude primary advertiser
+        ).all()
+        
+        for activity in contact_activities:
+            if activity.advertiser not in related_advertisers:
+                related_advertisers.append(activity.advertiser)
+        
+        return related_advertisers
 
 class Activity(db.Model):
     id = db.Column(db.Integer, primary_key=True)

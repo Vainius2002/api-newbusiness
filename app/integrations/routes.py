@@ -61,6 +61,10 @@ def webhook_agency_crm():
             # Sync contact
             sync_contact(data)
             
+        elif event == 'contact.updated':
+            # Update existing contact
+            update_contact(data)
+            
         elif event == 'invoice.created':
             # Create activity for invoice
             create_invoice_activity(data)
@@ -160,34 +164,143 @@ def sync_brand_to_advertiser(brand_data):
     db.session.commit()
 
 def sync_contact(contact_data):
-    """Sync contact from agency-crm"""
+    """Sync contact from agency-crm - one contact with multiple advertiser relationships"""
     
-    # Find advertisers that might be related to this contact
-    # This is a simplified approach - you might want more sophisticated matching
-    for brand in contact_data.get('brands', []):
+    if not contact_data.get('email'):
+        print("❌ No email provided for contact sync")
+        return
+    
+    # Check if contact already exists (across any advertiser)
+    existing_contact = Contact.query.filter_by(email=contact_data.get('email')).first()
+    
+    if existing_contact:
+        print(f"📧 Contact already exists: {existing_contact.first_name} {existing_contact.last_name}")
+        # Update existing contact and handle new brand relationships
+        update_contact(contact_data)
+        return
+    
+    # Create new contact - use first brand as primary advertiser
+    brands = contact_data.get('brands', [])
+    if not brands:
+        print("❌ No brands provided for contact sync")
+        return
+    
+    # Find primary advertiser (first brand)
+    primary_brand = brands[0]
+    primary_advertiser = Advertiser.query.filter(
+        Advertiser.name.contains(primary_brand['name'])
+    ).first()
+    
+    if not primary_advertiser:
+        print(f"❌ Primary advertiser not found for brand: {primary_brand['name']}")
+        return
+    
+    # Create the contact with primary advertiser
+    contact = Contact(
+        advertiser_id=primary_advertiser.id,
+        first_name=contact_data.get('first_name', ''),
+        last_name=contact_data.get('last_name', ''),
+        email=contact_data.get('email'),
+        phone=contact_data.get('phone'),
+        linkedin_url=contact_data.get('linkedin_url'),
+        added_by_id=1,  # System user
+        created_at=datetime.utcnow()
+    )
+    db.session.add(contact)
+    db.session.flush()  # Get the contact ID
+    
+    print(f"✅ Created contact: {contact.first_name} {contact.last_name} (Primary: {primary_advertiser.name})")
+    
+    # Create activities for all other advertisers to show the relationship
+    for brand in brands:
         advertiser = Advertiser.query.filter(
             Advertiser.name.contains(brand['name'])
         ).first()
         
         if advertiser:
-            # Check if contact already exists
-            existing_contact = Contact.query.filter_by(
-                advertiser_id=advertiser.id,
-                email=contact_data.get('email')
-            ).first()
-            
-            if not existing_contact and contact_data.get('email'):
-                contact = Contact(
+            if advertiser.id != primary_advertiser.id:
+                # Create relationship activity for other advertisers
+                activity = Activity(
                     advertiser_id=advertiser.id,
-                    first_name=contact_data.get('first_name', ''),
-                    last_name=contact_data.get('last_name', ''),
-                    email=contact_data.get('email'),
-                    phone=contact_data.get('phone'),
-                    linkedin_url=contact_data.get('linkedin_url'),
-                    added_by_id=1,  # System user
+                    user_id=1,  # System user
+                    activity_type='note',
+                    description=f"Contact relationship established: {contact.first_name} {contact.last_name}",
+                    outcome=f"Contact: {contact.email} | Phone: {contact.phone or 'N/A'}",
                     created_at=datetime.utcnow()
                 )
-                db.session.add(contact)
+                db.session.add(activity)
+                print(f"🔗 Created relationship activity for: {advertiser.name}")
+            
+            # Create sync activity for primary advertiser
+            else:
+                activity = Activity(
+                    advertiser_id=advertiser.id,
+                    user_id=1,  # System user
+                    activity_type='note',
+                    description=f"Contact synced from Agency CRM: {contact.first_name} {contact.last_name}",
+                    outcome=f"New contact added from Agency CRM sync",
+                    created_at=datetime.utcnow()
+                )
+                db.session.add(activity)
+    
+    db.session.commit()
+
+def update_contact(contact_data):
+    """Update existing contact from agency-crm - maintaining single contact with multiple relationships"""
+    
+    print(f"🔍 Looking for existing contact with email: {contact_data.get('email')}")
+    
+    if not contact_data.get('email'):
+        print("❌ No email provided, cannot update contact")
+        return
+    
+    # Find THE existing contact (should be only one now)
+    existing_contact = Contact.query.filter_by(email=contact_data.get('email')).first()
+    
+    if existing_contact:
+        print(f"📧 Found existing contact: {existing_contact.first_name} {existing_contact.last_name}")
+        print(f"   Primary advertiser: {existing_contact.advertiser.name}")
+        
+        # Update the contact information
+        existing_contact.first_name = contact_data.get('first_name', existing_contact.first_name)
+        existing_contact.last_name = contact_data.get('last_name', existing_contact.last_name) 
+        existing_contact.phone = contact_data.get('phone', existing_contact.phone)
+        existing_contact.linkedin_url = contact_data.get('linkedin_url', existing_contact.linkedin_url)
+        existing_contact.updated_at = datetime.utcnow()
+        
+        print(f"🔄 Updated contact information")
+        
+        # Handle brand relationships - create activities for all related advertisers
+        for brand in contact_data.get('brands', []):
+            advertiser = Advertiser.query.filter(
+                Advertiser.name.contains(brand['name'])
+            ).first()
+            
+            if advertiser:
+                # Create/update activity for this advertiser relationship
+                activity = Activity(
+                    advertiser_id=advertiser.id,
+                    user_id=1,  # System user
+                    activity_type='note',
+                    description=f"Contact updated from Agency CRM: {existing_contact.first_name} {existing_contact.last_name}",
+                    outcome=f"Contact info synchronized | Email: {existing_contact.email} | Phone: {existing_contact.phone or 'N/A'}",
+                    created_at=datetime.utcnow()
+                )
+                db.session.add(activity)
+                
+                if advertiser.id == existing_contact.advertiser_id:
+                    print(f"✅ Updated primary relationship: {advertiser.name}")
+                else:
+                    print(f"🔗 Updated related relationship: {advertiser.name}")
+        
+        print(f"✅ Contact update completed with all brand relationships")
+        
+    else:
+        # No existing contact found, create new one
+        print(f"❌ No existing contact found with email '{contact_data.get('email')}'")
+        print(f"🔄 Creating new contact")
+        sync_contact(contact_data)
+        return
     
     db.session.commit()
 

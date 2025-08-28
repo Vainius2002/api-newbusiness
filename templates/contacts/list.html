@@ -63,9 +63,14 @@
                 </td>
                 <td>{{ contact.phone or '-' }}</td>
                 <td>
-                    <a href="{{ url_for('advertisers.view_advertiser', id=contact.advertiser.id) }}">
-                        {{ contact.advertiser.name }}
-                    </a>
+                    {% set related_advertisers = contact.get_related_advertisers() %}
+                    {% for advertiser in related_advertisers %}
+                        <a href="{{ url_for('advertisers.view_advertiser', id=advertiser.id) }}" class="badge bg-{{ 'primary' if advertiser.id == contact.advertiser_id else 'secondary' }} me-1">
+                            {{ advertiser.name }}
+                            {% if advertiser.id == contact.advertiser_id %}<small> (Primary)</small>{% endif %}
+                        </a>
+                        {% if not loop.last %}<br>{% endif %}
+                    {% endfor %}
                 </td>
                 <td>
                     {% if contact.linkedin_url %}

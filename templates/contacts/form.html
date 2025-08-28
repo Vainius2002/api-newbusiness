@@ -17,17 +17,26 @@
                 <form method="POST" novalidate>
                     {{ form.hidden_tag() }}
                     
-                    {% if action == 'Edit' %}
                     <div class="mb-3">
-                        {{ form.advertiser_id.label(class="form-label") }}
-                        {{ form.advertiser_id(class="form-control" if not form.advertiser_id.errors else "form-control is-invalid") }}
-                        {% if form.advertiser_id.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.advertiser_id.errors %}{{ error }}{% endfor %}
+                        <label class="form-label">{{ form.advertisers.label.text }}</label>
+                        <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                            {% for value, label in form.advertisers.choices %}
+                                <div class="form-check">
+                                    <input type="checkbox" name="advertisers" value="{{ value }}" 
+                                           {% if form.advertisers.data and value in (form.advertisers.data or []) %}checked{% endif %}
+                                           class="form-check-input" id="advertiser_{{ value }}">
+                                    <label class="form-check-label" for="advertiser_{{ value }}">
+                                        {{ label }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if form.advertisers.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.advertisers.errors %}{{ error }}{% endfor %}
                             </div>
                         {% endif %}
                     </div>
-                    {% endif %}
                     
                     <div class="mb-3">
                         {{ form.first_name.label(class="form-label") }}
@@ -76,7 +85,11 @@
                     
                     <div class="d-flex gap-2">
                         {{ form.submit(class="btn btn-primary") }}
+                        {% if advertiser %}
                         <a href="{{ url_for('advertisers.view_advertiser', id=advertiser.id) }}" class="btn btn-secondary">Cancel</a>
+                        {% else %}
+                        <a href="{{ url_for('contacts.list_contacts') }}" class="btn btn-secondary">Cancel</a>
+                        {% endif %}
                     </div>
                 </form>
             </div>

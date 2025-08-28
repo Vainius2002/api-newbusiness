@@ -103,7 +103,7 @@ class SpendingData(db.Model):
 
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    advertiser_id = db.Column(db.Integer, db.ForeignKey('advertiser.id'), nullable=False)
+    advertiser_id = db.Column(db.Integer, db.ForeignKey('advertiser.id'), nullable=True)
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(200))
@@ -123,14 +123,21 @@ class Contact(db.Model):
     
     def get_related_advertisers(self):
         """Get all advertisers related to this contact (primary + relationships via activities)"""
-        # Start with primary advertiser
-        related_advertisers = [self.advertiser]
+        # Start with primary advertiser if it exists
+        related_advertisers = []
+        if self.advertiser:
+            related_advertisers.append(self.advertiser)
         
-        # Find other advertisers mentioned in contact activities
-        contact_activities = Activity.query.filter(
-            Activity.description.contains(f"{self.first_name} {self.last_name}"),
-            Activity.advertiser_id != self.advertiser_id  # Exclude primary advertiser
-        ).all()
+        # Find other advertisers mentioned in contact relationship activities
+        filter_conditions = [
+            Activity.description.contains(f"Contact relationship established: {self.first_name} {self.last_name}")
+        ]
+        
+        # Only exclude primary advertiser if it exists
+        if self.advertiser_id:
+            filter_conditions.append(Activity.advertiser_id != self.advertiser_id)
+        
+        contact_activities = Activity.query.filter(*filter_conditions).all()
         
         for activity in contact_activities:
             if activity.advertiser not in related_advertisers:

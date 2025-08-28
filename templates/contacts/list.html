@@ -88,7 +88,7 @@
                     </small>
                 </td>
                 <td>
-                    {% if current_user.is_team_lead() or contact.advertiser.assigned_user_id == current_user.id %}
+                    {% if current_user.is_team_lead() or (contact.advertiser and contact.advertiser.assigned_user_id == current_user.id) or not contact.advertiser %}
                     <a href="{{ url_for('contacts.edit_contact', id=contact.id) }}" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-pencil"></i>
                     </a>

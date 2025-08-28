@@ -24,3 +24,10 @@ class ContactForm(FlaskForm):
         # Initialize advertisers.data to empty list if None to prevent TypeError
         if self.advertisers.data is None:
             self.advertisers.data = []
+    
+    def validate_linkedin_url(self, linkedin_url):
+        if linkedin_url.data:
+            url = linkedin_url.data.strip()
+            # Normalize LinkedIn URLs - add https:// if missing protocol
+            if url and not url.startswith(('http://', 'https://')):
+                linkedin_url.data = 'https://' + url

@@ -189,6 +189,12 @@ def edit_contact(id):
             contact.advertiser_id = None
         
         db.session.commit()
+        
+        # Trigger webhook to notify Agency CRM of the update
+        # We'll trigger for all contacts, but Agency CRM will need to handle the mapping
+        from app.webhook_helper import notify_contact_updated
+        notify_contact_updated(contact)
+        
         flash('Contact updated successfully!', 'success')
         return redirect(url_for('contacts.list_contacts'))
     

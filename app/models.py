@@ -178,3 +178,24 @@ class Attachment(db.Model):
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     uploaded_by = db.relationship('User', backref='uploaded_attachments')
+
+class Webhook(db.Model):
+    """Webhook configuration for outgoing notifications"""
+    id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.String(500), nullable=False)
+    events = db.Column(db.JSON, nullable=False)  # List of events to trigger webhook
+    secret = db.Column(db.String(255), nullable=False)  # Secret for signature
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    logs = db.relationship('WebhookLog', backref='webhook', lazy='dynamic')
+
+class WebhookLog(db.Model):
+    """Log of webhook calls"""
+    id = db.Column(db.Integer, primary_key=True)
+    webhook_id = db.Column(db.Integer, db.ForeignKey('webhook.id'), nullable=False)
+    event = db.Column(db.String(100), nullable=False)
+    payload = db.Column(db.JSON)
+    response_status = db.Column(db.Integer)
+    response_body = db.Column(db.Text)
+    triggered_at = db.Column(db.DateTime, default=datetime.utcnow)
